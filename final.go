@@ -71,8 +71,9 @@ func startSession(w http.ResponseWriter, r *http.Request) {
 		}
 		startList = append(startList, j)
 	}
-	fmt.Fprintln(w, "starting session")
-	saveList(startList, streamString)
+	fmt.Fprintf(w, "started session : %s\n", vars["session"])
+	log.Printf("started session : %s\n", vars["session"])
+	saveList(startList, vars["session"]+streamString)
 	w.WriteHeader(http.StatusOK)
 	log.Println("started session and loaded list")
 }
@@ -80,28 +81,39 @@ func startSession(w http.ResponseWriter, r *http.Request) {
 func displace(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	tempVar, err := strconv.Atoi(vars["var"])
+	if _, err := os.Stat(vars["session"]+streamString); os.IsNotExist(err) {
+		fmt.Fprintln(w, "No such session active")
+		return
+	}
 	if err!=nil {
 		panic(err)
 	}
 	fmt.Fprintf(w, "giving %d a chance at displacement\n", tempVar)
-	R := loadList(streamString)
+	R := loadList(vars["session"]+streamString)
 	S := append(R, tempVar)
 	reservoirSample(S, &R)
-	saveList(R, streamString)
+	saveList(R, vars["session"]+streamString)
 	log.Println("list is now = ", R)
 }
 
 func closeSession(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	if _, err := os.Stat(vars["session"]+streamString); os.IsNotExist(err) {
+		fmt.Fprintln(w, "No such session active")
+		return
+	}
 	// just displaying the result
-	fmt.Fprintln(w, loadList(streamString))
+	fmt.Fprintln(w, loadList(vars["session"]+streamString))
+	log.Println(loadList(vars["session"]+streamString))
+	os.Remove(vars["session"]+streamString)
 	w.WriteHeader(http.StatusOK)
-	log.Println("closed session and made list")
+	log.Println("closed session")
 }
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/start/{list}", startSession).Methods("POST")
-	router.HandleFunc("/displace/{var}", displace).Methods("POST")
-	router.HandleFunc("/close", closeSession).Methods("GET")
+	router.HandleFunc("/start/{session}/{list}", startSession).Methods("POST")
+	router.HandleFunc("/displace/{session}/{var}", displace).Methods("POST")
+	router.HandleFunc("/close/{session}", closeSession).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
