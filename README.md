@@ -11,6 +11,8 @@ It allows reservoir sampling as a service with providing the following require f
 
 You can run the service using `go run final.go`. It runs on `localhost:8080`
 
+You may need to `go get github.com/gorilla/mux`
+
 The commands are: 
 - Starting a session:
     - `curl --request POST http://127.0.0.1:8080/start/{session_name}/{list of numbers} -v`
@@ -27,4 +29,4 @@ The commands are:
 
 Looking forward to your comments. Regardless of next steps, I'd appreciate if you could give me your feedback on this work and tips as to how I could be better. 
 
-You may contact me at avivaid2018@u.northwestern.edu or comment on this repo
+You may contact me at avivaid2018 at u dot northwestern dot edu or comment on this repo
