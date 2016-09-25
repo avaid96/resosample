@@ -45,10 +45,6 @@ func loadList(name string) []int {
 func reservoirSample(S []int, R *[]int) {
 	// caching length in k to prevent double call
 	k := len(*R)-1
-	// filling the reservoir array
-	for index:=0; index<=k; index++ {
-		(*R)[index] = S[index]
-	}
 	// replacing elements with gradually increasing probability
 	for index:=k+1; index<len(S); index++ {
 		randGen := rand.New(rand.NewSource(time.Now().UnixNano()))
