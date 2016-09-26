@@ -1,17 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
-	"encoding/json"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
-	"strings"
-	"strconv"
 )
 
 const streamString = "stream"
@@ -44,12 +44,12 @@ func loadList(name string) []int {
 
 func reservoirSample(S []int, R *[]int) {
 	// caching length in k to prevent double call
-	k := len(*R)-1
+	k := len(*R) - 1
 	// replacing elements with gradually increasing probability
-	for index:=k+1; index<len(S); index++ {
+	for index := k + 1; index < len(S); index++ {
 		randGen := rand.New(rand.NewSource(time.Now().UnixNano()))
-		j := randGen.Intn(index+1)
-		if j<=k {
+		j := randGen.Intn(index + 1)
+		if j <= k {
 			(*R)[j] = S[index]
 		}
 	}
@@ -77,15 +77,15 @@ func startSession(w http.ResponseWriter, r *http.Request) {
 func displace(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	tempVar, err := strconv.Atoi(vars["var"])
-	if _, err := os.Stat(vars["session"]+streamString); os.IsNotExist(err) {
+	if _, err := os.Stat(vars["session"] + streamString); os.IsNotExist(err) {
 		fmt.Fprintln(w, "No such session active")
 		return
 	}
-	if err!=nil {
+	if err != nil {
 		panic(err)
 	}
 	fmt.Fprintf(w, "giving %d a chance at displacement\n", tempVar)
-	R := loadList(vars["session"]+streamString)
+	R := loadList(vars["session"] + streamString)
 	S := append(R, tempVar)
 	reservoirSample(S, &R)
 	saveList(R, vars["session"]+streamString)
@@ -94,14 +94,14 @@ func displace(w http.ResponseWriter, r *http.Request) {
 
 func closeSession(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	if _, err := os.Stat(vars["session"]+streamString); os.IsNotExist(err) {
+	if _, err := os.Stat(vars["session"] + streamString); os.IsNotExist(err) {
 		fmt.Fprintln(w, "No such session active")
 		return
 	}
 	// just displaying the result
 	fmt.Fprintln(w, loadList(vars["session"]+streamString))
-	log.Println(loadList(vars["session"]+streamString))
-	os.Remove(vars["session"]+streamString)
+	log.Println(loadList(vars["session"] + streamString))
+	os.Remove(vars["session"] + streamString)
 	w.WriteHeader(http.StatusOK)
 	log.Println("closed session")
 }
